@@ -1,0 +1,71 @@
+import unittest
+from unittest.mock import patch
+from tkinter import StringVar
+import tkinter.messagebox
+from Address-Book.addressbook import onClickAdded
+
+class Test_AddressbookOnClickAdded(unittest.TestCase):
+
+    @patch('tkinter.messagebox.showinfo')
+    def test_message_box_display_with_correct_name(self, mock_showinfo):
+        # Arrange
+        Name = StringVar()
+        Name.set("John Doe")
+        
+        # Act
+        onClickAdded()
+        
+        # Assert
+        mock_showinfo.assert_called_once_with(" ", "John Doe got added")
+
+    @patch('tkinter.messagebox.showinfo')
+    def test_handle_empty_name_variable(self, mock_showinfo):
+        # Arrange
+        Name = StringVar()
+        Name.set("")
+        
+        # Act
+        onClickAdded()
+        
+        # Assert
+        mock_showinfo.assert_called_once_with(" ", " got added")
+
+    @patch('tkinter.messagebox.showinfo')
+    def test_handle_special_characters_in_name(self, mock_showinfo):
+        # Arrange
+        Name = StringVar()
+        Name.set("!@#$%^&*")
+        
+        # Act
+        onClickAdded()
+        
+        # Assert
+        mock_showinfo.assert_called_once_with(" ", "!@#$%^&* got added")
+
+    @patch('tkinter.messagebox.showinfo')
+    def test_handle_long_names(self, mock_showinfo):
+        # Arrange
+        Name = StringVar()
+        long_name = "A" * 1000  # TODO: Adjust the length if necessary
+        Name.set(long_name)
+        
+        # Act
+        onClickAdded()
+        
+        # Assert
+        mock_showinfo.assert_called_once_with(" ", f"{long_name} got added")
+
+    @patch('tkinter.messagebox.showinfo')
+    def test_non_string_name_handling(self, mock_showinfo):
+        # Arrange
+        Name = StringVar()
+        Name.set(12345)  # TODO: Change to a non-string type if needed
+        
+        # Act
+        onClickAdded()
+        
+        # Assert
+        mock_showinfo.assert_called_once_with(" ", "12345 got added")
+
+if __name__ == '__main__':
+    unittest.main()
