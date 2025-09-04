@@ -1,0 +1,68 @@
+import unittest
+from unittest.mock import patch
+from tkinter import StringVar
+import tkinter.messagebox
+from Address-Book.addressbook import onClickDeleted
+
+class Test_AddressbookOnClickDeleted(unittest.TestCase):
+
+    @patch('tkinter.messagebox.showinfo')
+    def test_message_box_display_with_correct_name(self, mock_showinfo):
+        # Arrange
+        Name.set("John Doe")
+        
+        # Act
+        onClickDeleted()
+        
+        # Assert
+        mock_showinfo.assert_called_with(" ", "John Doe got deleted")
+
+    @patch('tkinter.messagebox.showinfo')
+    def test_handle_empty_name_gracefully(self, mock_showinfo):
+        # Arrange
+        Name.set("")
+        
+        # Act
+        onClickDeleted()
+        
+        # Assert
+        mock_showinfo.assert_called_with(" ", " got deleted")
+
+    @patch('tkinter.messagebox.showinfo')
+    def test_special_characters_in_name(self, mock_showinfo):
+        # Arrange
+        Name.set("J@hn D#e!")
+        
+        # Act
+        onClickDeleted()
+        
+        # Assert
+        mock_showinfo.assert_called_with(" ", "J@hn D#e! got deleted")
+
+    @patch('tkinter.messagebox.showinfo')
+    def test_long_names(self, mock_showinfo):
+        # Arrange
+        long_name = "A" * 1000  # TODO: Adjust the length if needed
+        Name.set(long_name)
+        
+        # Act
+        onClickDeleted()
+        
+        # Assert
+        mock_showinfo.assert_called_with(" ", f"{long_name} got deleted")
+
+    def test_function_does_not_alter_name_object(self):
+        # Arrange
+        original_name = "John Doe"
+        Name.set(original_name)
+        
+        # Act
+        onClickDeleted()
+        
+        # Assert
+        self.assertEqual(Name.get(), original_name)
+
+if __name__ == '__main__':
+    # Initialize the Name variable for testing
+    Name = StringVar()
+    unittest.main()

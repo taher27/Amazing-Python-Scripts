@@ -1,0 +1,87 @@
+import unittest
+from unittest.mock import patch, MagicMock
+from tkinter import Toplevel, Label, Button
+from Address-Book.addressbook import create_task
+
+class Test_AddressbookCreateTask(unittest.TestCase):
+
+    @patch('Address-Book.addressbook.conn')
+    @patch('Address-Book.addressbook.Name')
+    @patch('Address-Book.addressbook.Number')
+    @patch('Address-Book.addressbook.list_of_names', new_callable=list)
+    @patch('Address-Book.addressbook.onClickAdded')
+    def test_add_new_task_with_valid_data(self, mock_onClickAdded, mock_list_of_names, mock_Number, mock_Name, mock_conn):
+        mock_Name.get.return_value = "John Doe"
+        mock_Number.get.return_value = "1234567890"
+        mock_list_of_names.clear()
+        
+        mock_cursor = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_cursor.lastrowid = 1
+        
+        result = create_task()
+        
+        mock_onClickAdded.assert_called_once()
+        mock_cursor.execute.assert_called_once_with(''' INSERT INTO tasks(name,status_id) VALUES(?,?) ''', ("John Doe", "1234567890"))
+        self.assertEqual(result, 1)
+
+    @patch('Address-Book.addressbook.Name')
+    @patch('Address-Book.addressbook.Number')
+    @patch('Address-Book.addressbook.Toplevel')
+    def test_add_task_with_empty_name(self, mock_Toplevel, mock_Number, mock_Name):
+        mock_Name.get.return_value = ""
+        mock_Number.get.return_value = "1234567890"
+        
+        create_task()
+        
+        mock_Toplevel.assert_called_once()
+        top_instance = mock_Toplevel.return_value
+        top_instance.geometry.assert_called_once_with('180x100')
+        top_instance.destroy.assert_not_called()
+
+    @patch('Address-Book.addressbook.Name')
+    @patch('Address-Book.addressbook.Number')
+    @patch('Address-Book.addressbook.Toplevel')
+    def test_add_task_with_invalid_phone_number(self, mock_Toplevel, mock_Number, mock_Name):
+        mock_Name.get.return_value = "John Doe"
+        mock_Number.get.return_value = "12345"
+        
+        create_task()
+        
+        mock_Toplevel.assert_called_once()
+        top_instance = mock_Toplevel.return_value
+        top_instance.geometry.assert_called_once_with('180x100')
+        top_instance.destroy.assert_not_called()
+
+    @patch('Address-Book.addressbook.Name')
+    @patch('Address-Book.addressbook.Number')
+    @patch('Address-Book.addressbook.list_of_names', new_callable=list)
+    @patch('Address-Book.addressbook.Toplevel')
+    def test_add_task_with_existing_name(self, mock_Toplevel, mock_list_of_names, mock_Number, mock_Name):
+        mock_Name.get.return_value = "John Doe"
+        mock_Number.get.return_value = "1234567890"
+        mock_list_of_names.append("John Doe")
+        
+        create_task()
+        
+        mock_Toplevel.assert_called_once()
+        top_instance = mock_Toplevel.return_value
+        top_instance.geometry.assert_called_once_with('180x100')
+        top_instance.destroy.assert_not_called()
+
+    @patch('Address-Book.addressbook.Name')
+    @patch('Address-Book.addressbook.Number')
+    @patch('Address-Book.addressbook.Toplevel')
+    def test_add_task_with_empty_name_and_invalid_phone(self, mock_Toplevel, mock_Number, mock_Name):
+        mock_Name.get.return_value = ""
+        mock_Number.get.return_value = "12345"
+        
+        create_task()
+        
+        mock_Toplevel.assert_called_once()
+        top_instance = mock_Toplevel.return_value
+        top_instance.geometry.assert_called_once_with('180x100')
+        top_instance.destroy.assert_not_called()
+
+if __name__ == '__main__':
+    unittest.main()
