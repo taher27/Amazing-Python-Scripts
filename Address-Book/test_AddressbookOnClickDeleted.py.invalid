@@ -1,0 +1,58 @@
+import pytest
+from unittest.mock import patch
+from tkinter import Tk, StringVar
+import tkinter.messagebox
+from Address-Book.addressbook import onClickDeleted
+
+@pytest.fixture
+def setup_tkinter_env():
+    root = Tk()
+    root.geometry('600x370')
+    name_var = StringVar()
+    return root, name_var
+
+@pytest.mark.valid
+def test_message_box_display_with_valid_name(setup_tkinter_env):
+    root, name_var = setup_tkinter_env
+    name_var.set("John Doe")
+    
+    with patch('tkinter.messagebox.showinfo') as mock_showinfo:
+        onClickDeleted()
+        mock_showinfo.assert_called_once_with(" ", "John Doe got deleted")
+
+@pytest.mark.invalid
+def test_message_box_display_with_empty_name(setup_tkinter_env):
+    root, name_var = setup_tkinter_env
+    name_var.set("")
+    
+    with patch('tkinter.messagebox.showinfo') as mock_showinfo:
+        onClickDeleted()
+        mock_showinfo.assert_called_once_with(" ", " got deleted")
+
+@pytest.mark.valid
+def test_message_box_display_with_special_characters(setup_tkinter_env):
+    root, name_var = setup_tkinter_env
+    name_var.set("@John!")
+    
+    with patch('tkinter.messagebox.showinfo') as mock_showinfo:
+        onClickDeleted()
+        mock_showinfo.assert_called_once_with(" ", "@John! got deleted")
+
+@pytest.mark.valid
+def test_message_box_display_with_long_name(setup_tkinter_env):
+    root, name_var = setup_tkinter_env
+    long_name = "A" * 101  # TODO: Adjust the length if needed
+    name_var.set(long_name)
+    
+    with patch('tkinter.messagebox.showinfo') as mock_showinfo:
+        onClickDeleted()
+        mock_showinfo.assert_called_once_with(" ", f"{long_name} got deleted")
+
+@pytest.mark.invalid
+def test_message_box_display_with_non_string_input(setup_tkinter_env):
+    root, name_var = setup_tkinter_env
+    name_var.set(12345)  # Non-string input
+    
+    with patch('tkinter.messagebox.showinfo') as mock_showinfo:
+        onClickDeleted()
+        mock_showinfo.assert_called_once_with(" ", "12345 got deleted")

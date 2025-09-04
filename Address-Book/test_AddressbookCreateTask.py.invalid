@@ -1,0 +1,97 @@
+import pytest
+from unittest.mock import patch, MagicMock
+from tkinter import Toplevel, Label, Button
+from Address-Book.addressbook import create_task, onClickAdded
+
+@pytest.fixture
+def mock_tkinter():
+    with patch('Address-Book.addressbook.Toplevel') as mock_toplevel, \
+         patch('Address-Book.addressbook.Label') as mock_label, \
+         patch('Address-Book.addressbook.Button') as mock_button:
+        yield mock_toplevel, mock_label, mock_button
+
+@pytest.fixture
+def mock_database():
+    with patch('Address-Book.addressbook.conn') as mock_conn:
+        mock_cursor = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        yield mock_conn, mock_cursor
+
+@pytest.mark.valid
+def test_create_task_with_valid_inputs(mock_tkinter, mock_database):
+    mock_toplevel, mock_label, mock_button = mock_tkinter
+    mock_conn, mock_cursor = mock_database
+
+    with patch('Address-Book.addressbook.Name.get', return_value='John Doe'), \
+         patch('Address-Book.addressbook.Number.get', return_value='1234567890'), \
+         patch('Address-Book.addressbook.list_of_names', []):
+        
+        result = create_task()
+        
+        onClickAdded.assert_called_once()
+        mock_cursor.execute.assert_called_once_with(''' INSERT INTO tasks(name,status_id) VALUES(?,?) ''', ('John Doe', '1234567890'))
+        mock_conn.commit.assert_called_once()
+        assert result == mock_cursor.lastrowid
+
+@pytest.mark.invalid
+def test_create_task_with_empty_name(mock_tkinter, mock_database):
+    mock_toplevel, mock_label, mock_button = mock_tkinter
+    mock_conn, mock_cursor = mock_database
+
+    with patch('Address-Book.addressbook.Name.get', return_value=''), \
+         patch('Address-Book.addressbook.Number.get', return_value='1234567890'):
+        
+        create_task()
+        
+        mock_toplevel.assert_called_once()
+        mock_label.assert_called_once_with(mock_toplevel(), text="NAME IS EMPTY\n")
+        mock_button.assert_called_once_with(mock_toplevel(), text=' Back ', command=mock_toplevel().destroy)
+        mock_cursor.execute.assert_not_called()
+
+@pytest.mark.invalid
+def test_create_task_with_invalid_phone_number_length(mock_tkinter, mock_database):
+    mock_toplevel, mock_label, mock_button = mock_tkinter
+    mock_conn, mock_cursor = mock_database
+
+    with patch('Address-Book.addressbook.Name.get', return_value='John Doe'), \
+         patch('Address-Book.addressbook.Number.get', return_value='12345'), \
+         patch('Address-Book.addressbook.list_of_names', []):
+        
+        create_task()
+        
+        mock_toplevel.assert_called_once()
+        mock_label.assert_called_once_with(mock_toplevel(), text="Phone no should be 10  digits\n")
+        mock_button.assert_called_once_with(mock_toplevel(), text=' Back ', command=mock_toplevel().destroy)
+        mock_cursor.execute.assert_not_called()
+
+@pytest.mark.invalid
+def test_create_task_with_duplicate_name(mock_tkinter, mock_database):
+    mock_toplevel, mock_label, mock_button = mock_tkinter
+    mock_conn, mock_cursor = mock_database
+
+    with patch('Address-Book.addressbook.Name.get', return_value='John Doe'), \
+         patch('Address-Book.addressbook.Number.get', return_value='1234567890'), \
+         patch('Address-Book.addressbook.list_of_names', ['John Doe']):
+        
+        create_task()
+        
+        mock_toplevel.assert_called_once()
+        mock_label.assert_called_once_with(mock_toplevel(), text="John Doe  Already Exist\n")
+        mock_button.assert_called_once_with(mock_toplevel(), text=' Back ', command=mock_toplevel().destroy)
+        mock_cursor.execute.assert_not_called()
+
+@pytest.mark.invalid
+def test_create_task_with_empty_phone_number(mock_tkinter, mock_database):
+    mock_toplevel, mock_label, mock_button = mock_tkinter
+    mock_conn, mock_cursor = mock_database
+
+    with patch('Address-Book.addressbook.Name.get', return_value='John Doe'), \
+         patch('Address-Book.addressbook.Number.get', return_value=''), \
+         patch('Address-Book.addressbook.list_of_names', []):
+        
+        create_task()
+        
+        mock_toplevel.assert_called_once()
+        mock_label.assert_called_once_with(mock_toplevel(), text="Phone no should be 10  digits\n")
+        mock_button.assert_called_once_with(mock_toplevel(), text=' Back ', command=mock_toplevel().destroy)
+        mock_cursor.execute.assert_not_called()

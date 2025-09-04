@@ -1,0 +1,73 @@
+import pytest
+from unittest.mock import patch
+from tkinter import StringVar
+import tkinter.messagebox
+from Address-Book.addressbook import onClickAdded
+
+class Test_AddressbookOnClickAdded:
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        global Name
+        Name = StringVar()
+
+    @pytest.mark.valid
+    def test_successful_addition_message_display(self):
+        # Arrange
+        Name.set("John Doe")
+        
+        with patch('tkinter.messagebox.showinfo') as mock_showinfo:
+            # Act
+            onClickAdded()
+            
+            # Assert
+            mock_showinfo.assert_called_once_with(" ", "John Doe got added")
+
+    @pytest.mark.invalid
+    def test_empty_name_input_handling(self):
+        # Arrange
+        Name.set("")
+        
+        with patch('tkinter.messagebox.showinfo') as mock_showinfo:
+            # Act
+            onClickAdded()
+            
+            # Assert
+            mock_showinfo.assert_called_once_with(" ", " got added")
+
+    @pytest.mark.regression
+    def test_message_box_title(self):
+        # Arrange
+        Name.set("Sample Name")
+        
+        with patch('tkinter.messagebox.showinfo') as mock_showinfo:
+            # Act
+            onClickAdded()
+            
+            # Assert
+            mock_showinfo.assert_called_once_with(" ", "Sample Name got added")
+
+    @pytest.mark.valid
+    def test_special_characters_in_name(self):
+        # Arrange
+        Name.set("John@Doe!")
+        
+        with patch('tkinter.messagebox.showinfo') as mock_showinfo:
+            # Act
+            onClickAdded()
+            
+            # Assert
+            mock_showinfo.assert_called_once_with(" ", "John@Doe! got added")
+
+    @pytest.mark.performance
+    def test_long_name_input(self):
+        # Arrange
+        long_name = "A" * 256  # TODO: Adjust the length if needed
+        Name.set(long_name)
+        
+        with patch('tkinter.messagebox.showinfo') as mock_showinfo:
+            # Act
+            onClickAdded()
+            
+            # Assert
+            mock_showinfo.assert_called_once_with(" ", f"{long_name} got added")
